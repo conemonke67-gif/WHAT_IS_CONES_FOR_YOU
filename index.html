@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>you find it, WHAT NOW</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #000;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      /* фон: чёрный -> ярко-красный за 60 секунд */
+      animation: toRed 60s linear forwards;
+    }
+
+    @keyframes toRed {
+      from { background-color: #000; }
+      to   { background-color: #ff0000; }
+    }
+
+    /* красивый фон после правильного кода */
+    #bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 1.6s ease;
+      background: linear-gradient(135deg, #ff9a3c, #ff4d6d, #a24bff, #3a7bff, #00d4c8, #ff9a3c);
+      background-size: 400% 400%;
+      animation: flow 14s ease infinite;
+    }
+    body.unlocked #bg {
+      opacity: 1;
+    }
+    @keyframes flow {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .small-text {
+      font-size: clamp(24px, 4vw, 42px);
+      line-height: 1.3;
+    }
+
+    .big-text {
+      margin-top: 12px;
+      font-size: clamp(90px, 22vw, 280px);
+      line-height: 1;
+      font-weight: normal;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    body.unlocked .big-text {
+      font-size: clamp(60px, 14vw, 190px);
+      text-shadow: 0 6px 30px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+    }
+
+    /* поле ввода кода */
+    #codeForm {
+      margin-top: 36px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    #codeInput {
+      width: min(320px, 80vw);
+      padding: 12px 16px;
+      font: inherit;
+      font-size: 22px;
+      text-align: center;
+      letter-spacing: 2px;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      border-radius: 10px;
+      outline: none;
+    }
+    #codeInput:focus {
+      border-color: #fff;
+    }
+    #codeInput.wrong {
+      border-color: #ff3b3b;
+      animation: shake 0.4s;
+    }
+    #codeBtn {
+      padding: 12px 22px;
+      font: inherit;
+      font-size: 22px;
+      color: #000;
+      background: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%      { transform: translateX(-8px); }
+      75%      { transform: translateX(8px); }
+    }
+
+    /* карточка с фото: выезжает из левого нижнего угла */
+    #profile {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 26px;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      border-radius: 0 18px 0 0;
+      transform: translate(-110%, 110%);
+      transition: transform 0.8s cubic-bezier(0.2, 0.9, 0.25, 1.1);
+    }
+    #profile.show {
+      transform: translate(0, 0);
+    }
+    #profile .nick {
+      font-size: 30px;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="bg"></div>
+
+  <div class="small-text" id="smallText">you find it,</div>
+  <div class="big-text" id="bigText">WHAT NOW</div>
+
+  <form id="codeForm" autocomplete="off">
+    <input id="codeInput" type="text" placeholder="enter code" spellcheck="false" autocapitalize="characters">
+    <button id="codeBtn" type="submit">OK</button>
+  </form>
+  <div id="errorMsg" style="margin-top:14px;font-size:22px;color:#ff6b6b;min-height:1.2em"></div>
+
+  <div id="profile">
+    <div class="nick">conemonke</div>
+  </div>
+
+  <script>
+    // ---------- Ввод кода ----------
+    const SECRET = "24ACISCOOLFORUS"; // регистр и пробелы не важны
+
+    const form = document.getElementById("codeForm");
+    const input = document.getElementById("codeInput");
+    const smallText = document.getElementById("smallText");
+    const bigText = document.getElementById("bigText");
+    const profile = document.getElementById("profile");
+    const errorMsg = document.getElementById("errorMsg");
+    let unlocked = false;
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const typed = input.value.replace(/\s+/g, "").toUpperCase();
+      if (typed === SECRET) {
+        unlocked = true;
+
+        // останавливаем покраснение, включаем красивый фон
+        document.body.style.animation = "none";
+        document.body.style.backgroundColor = "#000";
+        document.body.classList.add("unlocked");
+
+        smallText.textContent = "code accepted,";
+        bigText.textContent = "YOUR CONES IS HERE";
+        form.style.display = "none";
+        errorMsg.style.display = "none";
+      } else {
+        input.classList.remove("wrong");
+        void input.offsetWidth; // перезапуск анимации
+        input.classList.add("wrong");
+        input.select();
+        errorMsg.textContent = "wrong code";
+      }
+    });
+
+    // после разблокировки: клик выдвигает фото из левого нижнего угла
+    document.addEventListener("click", () => {
+      if (unlocked) profile.classList.add("show");
+    });
+  </script>
+</body>
+</html>
